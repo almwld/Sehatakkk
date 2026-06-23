@@ -60,7 +60,6 @@ dependencies:
 
   # Media
   image_picker: ^1.0.7
-  file_picker: ^5.5.0
   url_launcher: ^6.2.3
   share_plus: ^7.2.1
   open_filex: ^4.4.0
@@ -193,3 +192,7 @@ flutter_native_splash:
   android_gravity: center
   ios_content_mode: center
   fullscreen: true
+  file_picker:
+    git:
+      url: https://github.com/miguelpruivo/flutter_file_picker.git
+      ref: master
