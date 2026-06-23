@@ -8,11 +8,13 @@ import '../../../core/services/call_service.dart';
 class CallScreen extends StatefulWidget {
   final String roomName;
   final String? displayName;
+  final bool isVideo;
 
   const CallScreen({
     Key? key,
     required this.roomName,
     this.displayName,
+    this.isVideo = true,
   }) : super(key: key);
 
   @override
@@ -35,6 +37,7 @@ class _CallScreenState extends State<CallScreen> {
       await _callService.joinMeeting(
         widget.roomName,
         widget.displayName ?? 'مستخدم',
+        widget.isVideo,
       );
       setState(() => _isConnecting = false);
     } catch (e) {
@@ -57,7 +60,11 @@ class _CallScreenState extends State<CallScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.videocam, size: 80, color: Colors.white54),
+            Icon(
+              widget.isVideo ? Icons.videocam : Icons.phone,
+              size: 80,
+              color: Colors.white54,
+            ),
             const SizedBox(height: 24),
             Text(
               _isConnecting ? 'جاري الاتصال...' : 'جاري المكالمة',

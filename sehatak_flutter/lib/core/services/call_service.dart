@@ -35,13 +35,13 @@ class CallService {
     await _jitsiMeet.hangUp();
   }
 
-  Future<void> joinMeeting(String roomName, String displayName) async {
+  Future<void> joinMeeting(String roomName, String displayName, bool isVideo) async {
     final options = JitsiMeetConferenceOptions(
       room: roomName,
       userDisplayName: displayName,
-      audioOnly: false,
+      audioOnly: !isVideo,
       audioMuted: false,
-      videoMuted: false,
+      videoMuted: !isVideo,
     );
     await _jitsiMeet.joinConference(options);
   }
