@@ -85,7 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
       MaterialPageRoute(
         builder: (_) => CallScreen(
           channelName: 'call_${DateTime.now().millisecondsSinceEpoch}',
-          callerName: _name,
+          displayName: _name,
           isVideo: isVideo,
         ),
       ),

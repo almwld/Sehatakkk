@@ -82,8 +82,8 @@ class _DoctorDetailsScreenState extends State<DoctorDetailsScreen> with SingleTi
             color: isDark ? const Color(0xFF111D33) : AppColors.surfaceContainerLow,
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               _actionBtn(Icons.chat, 'محادثة', AppColors.info, () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(doctorName: doc['name'])))),
-              _actionBtn(Icons.videocam, 'فيديو', AppColors.success, () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallScreen(channelName: 'call_${doc['name']}', callerName: doc['name'])))),
-              _actionBtn(Icons.call, 'صوتي', AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallScreen(channelName: 'call_${doc['name']}', callerName: doc['name'], isVideo: false)))),
+              _actionBtn(Icons.videocam, 'فيديو', AppColors.success, () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallScreen(roomName: 'call_${doc['name']}', displayName: doc['name'])))),
+              _actionBtn(Icons.call, 'صوتي', AppColors.primary, () => Navigator.push(context, MaterialPageRoute(builder: (_) => CallScreen(roomName: 'call_${doc['name']}', displayName: doc['name'], isVideo: false)))),
               _actionBtn(Icons.person_add, _isFollowing ? 'متابَع' : 'متابعة', AppColors.purple, () => setState(() => _isFollowing = !_isFollowing)),
               _actionBtn(Icons.calendar_today, 'حجز', AppColors.teal, () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorBookingScreen(doctorId: widget.doctorId ?? '1')))),
             ]),
