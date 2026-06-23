@@ -60,7 +60,7 @@ dependencies:
 
   # Media
   image_picker: ^1.0.7
-  file_picker: ^8.0.0
+  file_picker: ^5.5.0
   url_launcher: ^6.2.3
   share_plus: ^7.2.1
   open_filex: ^4.4.0
