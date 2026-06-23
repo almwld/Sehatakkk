@@ -1,208 +1,256 @@
-import 'package:flutter/material.dart';
-import 'package:sehatak/core/constants/app_colors.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../core/services/call_service.dart';
+
+/// Call screen for video/audio calls using Jitsi Meet
 class CallScreen extends StatefulWidget {
-  final String channelName;
-  final String callerName;
-  final bool isVideo;
-  
+  final String callId;
+  final String? receiverId;
+  final String? receiverName;
+  final String? receiverPhoto;
+  final bool isVideoCall;
+  final bool isIncoming;
+
   const CallScreen({
-    super.key,
-    required this.channelName,
-    required this.callerName,
-    this.isVideo = true,
-  });
+    Key? key,
+    required this.callId,
+    this.receiverId,
+    this.receiverName,
+    this.receiverPhoto,
+    this.isVideoCall = true,
+    this.isIncoming = false,
+  }) : super(key: key);
 
   @override
   State<CallScreen> createState() => _CallScreenState();
 }
 
-class _CallScreenState extends State<CallScreen> {
+class _CallScreenState extends State<CallScreen>
+    with SingleTickerProviderStateMixin {
+  final CallService _callService = CallService();
+
+  late AnimationController _animationController;
+  late Animation<double> _pulseAnimation;
+
+  CallState _callState = CallState.connecting;
+  Timer? _callTimer;
+  int _callDuration = 0;
   bool _isMuted = false;
+  bool _isCameraOff = false;
   bool _isSpeakerOn = true;
-  bool _isVideoOn = true;
-  bool _isCallConnected = true;
-  Duration _callDuration = Duration.zero;
-  
+
+  StreamSubscription? _callStateSubscription;
+
   @override
   void initState() {
     super.initState();
-    _startCallTimer();
+    _setupAnimations();
+    _listenToCallState();
+
+    if (!widget.isIncoming) {
+      _startCall();
+    } else {
+      setState(() => _callState = CallState.ringing);
+    }
+
+    // Lock to portrait for call UI
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
   }
-  
-  void _startCallTimer() {
-    Future.delayed(const Duration(seconds: 1), () {
-      if (_isCallConnected && mounted) {
-        setState(() => _callDuration += const Duration(seconds: 1));
+
+  void _setupAnimations() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  void _listenToCallState() {
+    _callStateSubscription = _callService.callStateStream.listen((state) {
+      setState(() => _callState = state);
+
+      if (state == CallState.inProgress) {
         _startCallTimer();
+      } else if (state == CallState.ended ||
+          state == CallState.failed ||
+          state == CallState.declined ||
+          state == CallState.timeout) {
+        _endCallAndNavigateBack();
       }
     });
   }
-  
-  String _formatDuration(Duration d) {
-    final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$mm:$ss';
+
+  Future<void> _startCall() async {
+    if (widget.receiverId == null) return;
+
+    try {
+      await _callService.startCall(
+        receiverId: widget.receiverId!,
+        receiverName: widget.receiverName ?? 'مستخدم',
+        receiverPhoto: widget.receiverPhoto,
+        type: widget.isVideoCall ? CallType.video : CallType.audio,
+      );
+    } catch (e) {
+      debugPrint('CallScreen: Failed to start call: $e');
+      setState(() => _callState = CallState.failed);
+    }
   }
-  
-  void _endCall() {
-    setState(() => _isCallConnected = false);
+
+  void _acceptCall() async {
+    await _callService.acceptCall(widget.callId);
+    if (_callService.currentSession != null) {
+      await _callService.joinJitsiMeeting(_callService.currentSession!);
+    }
+  }
+
+  void _declineCall() async {
+    await _callService.declineCall(widget.callId);
+    _navigateBack();
+  }
+
+  void _endCall() async {
+    await _callService.endCall();
+  }
+
+  void _startCallTimer() {
+    _callTimer?.cancel();
+    _callTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() => _callDuration++);
+    });
+  }
+
+  void _endCallAndNavigateBack() {
+    _callTimer?.cancel();
+    Future.delayed(const Duration(seconds: 1), _navigateBack);
+  }
+
+  void _navigateBack() {
+    // Restore orientations
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     Navigator.of(context).pop();
+  }
+
+  String _formatDuration(int seconds) {
+    final mins = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _callTimer?.cancel();
+    _callStateSubscription?.cancel();
+
+    // Restore orientations
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
-      body: SafeArea(
-        child: Stack(
+    return WillPopScope(
+      onWillPop: () async {
+        _endCall();
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          fit: StackFit.expand,
           children: [
-            // خلفية المكالمة
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF1A1A2E),
-                      const Color(0xFF16213E).withOpacity(0.9),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            
-            // صورة مصغرة لنفسك
-            if (widget.isVideo && _isVideoOn)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 120,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white, width: 2),
-                    color: const Color(0xFF0F3460),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.videocam, color: Colors.white70, size: 40),
-                  ),
-                ),
-              ),
-            
-            // معلومات المتصل
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, AppColors.primaryDark],
-                        ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.4),
-                            blurRadius: 20,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          widget.callerName[0],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.callerName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _isCallConnected ? _formatDuration(_callDuration) : 'انتهت المكالمة',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                    if (_isCallConnected)
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.fiber_manual_record, color: AppColors.success, size: 8),
-                            SizedBox(width: 4),
-                            Text('متصل', style: TextStyle(color: AppColors.success, fontSize: 10)),
-                          ],
-                        ),
-                      ),
+            // Background gradient
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF1B5E20).withOpacity(0.8),
+                    Colors.black,
                   ],
                 ),
               ),
             ),
-            
-            // أزرار التحكم
-            Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+            // Main content
+            SafeArea(
+              child: Column(
                 children: [
-                  _controlBtn(Icons.mic, _isMuted ? AppColors.error : Colors.white70, 'الميك', () {
-                    setState(() => _isMuted = !_isMuted);
-                  }),
-                  _controlBtn(_isSpeakerOn ? Icons.volume_up : Icons.volume_off, Colors.white70, 'الصوت', () {
-                    setState(() => _isSpeakerOn = !_isSpeakerOn);
-                  }),
-                  if (widget.isVideo)
-                    _controlBtn(_isVideoOn ? Icons.videocam : Icons.videocam_off, _isVideoOn ? Colors.white70 : AppColors.error, 'الفيديو', () {
-                      setState(() => _isVideoOn = !_isVideoOn);
-                    }),
-                  // زر إنهاء المكالمة
-                  GestureDetector(
-                    onTap: _endCall,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: const BoxDecoration(
-                            color: AppColors.error,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.call_end, color: Colors.white, size: 28),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text('إنهاء', style: TextStyle(color: Colors.white70, fontSize: 10)),
-                      ],
+                  const Spacer(flex: 2),
+
+                  // Receiver avatar with pulse animation
+                  _buildAvatar(),
+
+                  const SizedBox(height: 32),
+
+                  // Receiver name
+                  Text(
+                    widget.receiverName ?? 'مستخدم',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Cairo',
                     ),
                   ),
-                  if (widget.isVideo)
-                    _controlBtn(Icons.cameraswitch, Colors.white70, 'تبديل', () {}),
+
+                  const SizedBox(height: 8),
+
+                  // Call state text
+                  Text(
+                    _getStateText(),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 16,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+
+                  // Call duration (when in progress)
+                  if (_callState == CallState.inProgress)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        _formatDuration(_callDuration),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontFamily: 'Cairo',
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+
+                  const Spacer(flex: 3),
+
+                  // Call controls
+                  if (_callState == CallState.ringing && widget.isIncoming)
+                    _buildIncomingCallControls()
+                  else if (_callState == CallState.inProgress)
+                    _buildInCallControls()
+                  else
+                    _buildConnectingControls(),
+
+                  const SizedBox(height: 48),
                 ],
               ),
             ),
@@ -211,26 +259,207 @@ class _CallScreenState extends State<CallScreen> {
       ),
     );
   }
-  
-  Widget _controlBtn(IconData icon, Color color, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 50,
-            height: 50,
+
+  Widget _buildAvatar() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        final isRinging = _callState == CallState.ringing;
+        final scale = isRinging ? _pulseAnimation.value : 1.0;
+
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: 120,
+            height: 120,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
               shape: BoxShape.circle,
+              color: Colors.grey.shade800,
+              border: Border.all(
+                color: _getStateColor(),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _getStateColor().withOpacity(0.4),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: widget.receiverPhoto != null
+                ? ClipOval(
+                    child: Image.network(
+                      widget.receiverPhoto!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildDefaultAvatar(),
+                    ),
+                  )
+                : _buildDefaultAvatar(),
           ),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Widget _buildDefaultAvatar() {
+    return const Icon(
+      Icons.person,
+      size: 60,
+      color: Colors.white54,
+    );
+  }
+
+  Widget _buildIncomingCallControls() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Decline button
+        _buildControlButton(
+          icon: Icons.call_end,
+          color: Colors.red,
+          label: 'رفض',
+          onTap: _declineCall,
+        ),
+        const SizedBox(width: 48),
+        // Accept button
+        _buildControlButton(
+          icon: widget.isVideoCall ? Icons.videocam : Icons.call,
+          color: Colors.green,
+          label: 'رد',
+          onTap: _acceptCall,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInCallControls() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Mute
+            _buildControlButton(
+              icon: _isMuted ? Icons.mic_off : Icons.mic,
+              color: _isMuted ? Colors.orange : Colors.white,
+              label: _isMuted ? 'صامت' : 'ميكروفون',
+              onTap: () => setState(() => _isMuted = !_isMuted),
+            ),
+            const SizedBox(width: 24),
+            // Camera toggle
+            if (widget.isVideoCall)
+              _buildControlButton(
+                icon: _isCameraOff ? Icons.videocam_off : Icons.videocam,
+                color: _isCameraOff ? Colors.orange : Colors.white,
+                label: _isCameraOff ? 'كاميرا مغلقة' : 'كاميرا',
+                onTap: () => setState(() => _isCameraOff = !_isCameraOff),
+              ),
+            const SizedBox(width: 24),
+            // Speaker
+            _buildControlButton(
+              icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_down,
+              color: _isSpeakerOn ? Colors.white : Colors.orange,
+              label: 'مكبر الصوت',
+              onTap: () => setState(() => _isSpeakerOn = !_isSpeakerOn),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        // End call button
+        _buildControlButton(
+          icon: Icons.call_end,
+          color: Colors.red,
+          label: 'إنهاء',
+          size: 70,
+          onTap: _endCall,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConnectingControls() {
+    return _buildControlButton(
+      icon: Icons.call_end,
+      color: Colors.red,
+      label: 'إلغاء',
+      onTap: _endCall,
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required Color color,
+    required String label,
+    double size = 60,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withOpacity(0.2),
+              border: Border.all(color: color.withOpacity(0.5)),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: size * 0.4,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.7),
+            fontSize: 12,
+            fontFamily: 'Cairo',
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getStateText() {
+    switch (_callState) {
+      case CallState.idle:
+        return '...';
+      case CallState.connecting:
+        return 'جاري الاتصال...';
+      case CallState.ringing:
+        return widget.isIncoming ? 'مكالمة واردة' : 'يرن...';
+      case CallState.inProgress:
+        return 'جاري المكالمة';
+      case CallState.ended:
+        return 'انتهت المكالمة';
+      case CallState.failed:
+        return 'فشل الاتصال';
+      case CallState.declined:
+        return 'تم الرفض';
+      case CallState.timeout:
+        return 'انتهى الوقت';
+    }
+  }
+
+  Color _getStateColor() {
+    switch (_callState) {
+      case CallState.inProgress:
+        return Colors.green;
+      case CallState.ringing:
+        return widget.isIncoming ? Colors.green : Colors.orange;
+      case CallState.failed:
+      case CallState.declined:
+        return Colors.red;
+      default:
+        return Colors.white;
+    }
   }
 }
