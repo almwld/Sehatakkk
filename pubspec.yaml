@@ -192,7 +192,5 @@ flutter_native_splash:
   android_gravity: center
   ios_content_mode: center
   fullscreen: true
-  file_picker:
     git:
-      url: https://github.com/miguelpruivo/flutter_file_picker.git
       ref: master
