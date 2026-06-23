@@ -1,0 +1,9 @@
+-keep class org.webrtc.** { *; }
+-keep class org.jitsi.** { *; }
+-keep class com.jitsi.** { *; }
+-keep class com.google.android.exoplayer2.** { *; }
+-keep class com.giphy.sdk.** { *; }
+-dontwarn org.webrtc.**
+-dontwarn org.jitsi.**
+-dontwarn com.jitsi.**
+-dontwarn com.google.android.exoplayer2.**
