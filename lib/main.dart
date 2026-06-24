@@ -3,24 +3,31 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'core/services/firebase_service.dart';
 import 'core/themes/theme_manager.dart';
 import 'presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'presentation/bloc/theme_bloc/theme_bloc.dart';
 import 'presentation/screens/auth/splash_screen.dart';
+import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([
+
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  await FirebaseService().initialize();
+  // Firebase مع timeout — لن يتجمد أبداً
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => throw Exception('firebase_timeout'),
+    );
+  } catch (e) {
+    debugPrint('[Firebase] init: $e');
+  }
 
   runApp(const MyApp());
 }
@@ -40,15 +47,16 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'صحتك',
             debugShowCheckedModeBanner: false,
-            builder: (context, child) {
-              return Directionality(
-                textDirection: TextDirection.rtl,
-                child: child!,
-              );
-            },
+            builder: (context, child) => Directionality(
+              textDirection: TextDirection.rtl,
+              child: child!,
+            ),
             theme: ThemeManager.lightTheme,
             darkTheme: ThemeManager.darkTheme,
-            themeMode: state is ThemeLoadedState ? state.themeMode : ThemeMode.light,
+            themeMode: state is ThemeLoadedState
+                ? state.themeMode
+                : ThemeMode.light,
+            onGenerateRoute: AppRouter.generateRoute,
             home: const SplashScreen(),
           );
         },
