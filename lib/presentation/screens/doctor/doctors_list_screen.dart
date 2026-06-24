@@ -204,7 +204,6 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                     Container(
                       width: 38, height: 38,
                       decoration: BoxDecoration(color: AppColors.info.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                      child: IconButton(icon: const Icon(Icons.chat, color: AppColors.info, size: 18), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(doctorName: d['name']))), padding: EdgeInsets.zero),
                     ),
                     const SizedBox(height: 6),
                     Container(
