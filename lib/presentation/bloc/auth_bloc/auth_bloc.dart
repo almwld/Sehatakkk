@@ -23,7 +23,6 @@ class RegisterRequested extends AuthEvent {
   List<Object?> get props => [name, email, phone, password];
 }
 class LogoutRequested extends AuthEvent {}
-class LoginWithGoogle extends AuthEvent {}
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -55,7 +54,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoginRequested>(_onLogin);
     on<RegisterRequested>(_onRegister);
     on<LogoutRequested>(_onLogout);
-    on<LoginWithGoogle>(_onLoginWithGoogle);
   }
 
   void _onAppStarted(AppStarted event, Emitter<AuthState> emit) {
@@ -95,10 +93,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthUnauthenticated());
   }
 
-  Future<void> _onLoginWithGoogle(LoginWithGoogle event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      final user = await _googleSignIn.signIn();
       if (user == null) { emit(AuthUnauthenticated()); return; }
       final auth = await user.authentication;
       final cred = GoogleAuthProvider.credential(accessToken: auth.accessToken, idToken: auth.idToken);

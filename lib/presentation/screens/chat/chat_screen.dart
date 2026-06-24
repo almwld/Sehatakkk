@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sehatak/core/constants/app_colors.dart';
-import 'package:sehatak/presentation/screens/call/call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String? doctorName;
@@ -83,7 +82,6 @@ class _ChatScreenState extends State<ChatScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CallScreen(
           isVideo: isVideo,
         ),
       ),
