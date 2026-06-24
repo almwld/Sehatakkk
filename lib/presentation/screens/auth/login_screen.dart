@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final d = Theme.of(context).brightness == Brightness.dark;
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (ctx, s) {
-        if (s is Authenticated) {
+        if (s is AuthAuthenticated) {
           Navigator.of(ctx).pushAndRemoveUntil(PageRouteBuilder(pageBuilder: (_, __, ___) => const HomeScreen(), transitionsBuilder: (_, a, __, ch) => FadeTransition(opacity: a, child: ch), transitionDuration: const Duration(milliseconds: 400)), (r) => false);
         }
         if (s is AuthError) _showMsg(s.message, true);

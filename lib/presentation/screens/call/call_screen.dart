@@ -1,29 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/services/call_service.dart';
 
 class CallScreen extends StatefulWidget {
   final String callId;
   final String? receiverName;
-  final bool isVideoCall;
-  final bool isIncoming;
 
-  const CallScreen({
-    Key? key,
-    required this.callId,
-    this.receiverName,
-    this.isVideoCall = true,
-    this.isIncoming = false,
-  }) : super(key: key);
+  const CallScreen({Key? key, required this.callId, this.receiverName}) : super(key: key);
 
   @override
   State<CallScreen> createState() => _CallScreenState();
 }
 
 class _CallScreenState extends State<CallScreen> {
-  final CallService _callService = CallService();
-  CallState _callState = CallState.connecting;
   Timer? _callTimer;
   int _callDuration = 0;
 
@@ -31,14 +20,12 @@ class _CallScreenState extends State<CallScreen> {
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    _callService.startCall('receiverId', 'receiverName', null, CallType.video);
     _callTimer = Timer.periodic(const Duration(seconds: 1), (_) => setState(() => _callDuration++));
   }
 
   @override
   void dispose() {
     _callTimer?.cancel();
-    _callService.dispose();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     super.dispose();
   }
@@ -60,11 +47,19 @@ class _CallScreenState extends State<CallScreen> {
             const Icon(Icons.videocam, size: 80, color: Colors.white54),
             const SizedBox(height: 24),
             Text(
-              _callState == CallState.inProgress ? 'جاري المكالمة' : 'جاري الاتصال...',
+              'جاري المكالمة مع ${widget.receiverName ?? "..."}',
               style: const TextStyle(color: Colors.white, fontSize: 20),
             ),
+            const SizedBox(height: 16),
+            Text(
+              _formatDuration(_callDuration),
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
+            ),
             const SizedBox(height: 50),
-            const CircularProgressIndicator(color: Colors.white),
+            IconButton(
+              icon: const Icon(Icons.call_end, size: 50, color: Colors.red),
+              onPressed: () => Navigator.pop(context),
+            ),
           ],
         ),
       ),
