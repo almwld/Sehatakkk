@@ -11,6 +11,7 @@ import 'presentation/screens/chat/chat_screen.dart';
 class AppRouter {
   static const String splash = '/';
   static const String login = '/login';
+  static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
   static const String doctors = '/doctors';
@@ -21,6 +22,8 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
+      case login:
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());

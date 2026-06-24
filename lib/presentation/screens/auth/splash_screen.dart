@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
       final s = context.read<AuthBloc>().state;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => s is AuthAuthenticated ? const HomeScreen() : const OnboardingScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => s is AuthAuthenticated ? const HomeScreen() : const LoginScreen()));
     });
   }
 
