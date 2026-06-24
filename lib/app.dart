@@ -28,7 +28,6 @@ import 'presentation/screens/payment/wallet_screen.dart';
 import 'presentation/screens/payment/payment_methods.dart';
 import 'presentation/screens/emergencies/emergency_numbers.dart';
 import 'presentation/screens/emergencies/sos_screen.dart';
-import 'presentation/screens/settings/settings_screen.dart';
 import 'presentation/screens/reports/reports_dashboard.dart';
 import 'presentation/screens/shared/notifications_screen.dart';
 import 'presentation/screens/shared/search_screen.dart';
@@ -63,13 +62,10 @@ class AppRouter {
   static const String paymentMethods = '/payment-methods';
   static const String emergencyNumbers = '/emergency';
   static const String sos = '/sos';
-  static const String settings = '/settings';
   static const String reports = '/reports';
   static const String notifications = '/notifications';
   static const String search = '/search';
 
-  static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case login:
@@ -79,7 +75,6 @@ class AppRouter {
       case forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case otpVerification:
-        final phone = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => OtpVerificationScreen(phone: phone ?? ''));
       case resetPassword:
         return MaterialPageRoute(builder: (_) => const ResetPasswordScreen());
@@ -90,10 +85,8 @@ class AppRouter {
       case doctorsList:
         return MaterialPageRoute(builder: (_) => const DoctorsListScreen());
       case doctorDetails:
-        final doctorId = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => DoctorDetailsScreen(doctorId: doctorId ?? ''));
       case doctorBooking:
-        final doctorId = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => DoctorBookingScreen(doctorId: doctorId ?? ''));
       case patientDashboard:
         return MaterialPageRoute(builder: (_) => const PatientDashboard());
@@ -108,22 +101,18 @@ class AppRouter {
       case pharmaciesList:
         return MaterialPageRoute(builder: (_) => const PharmaciesListScreen());
       case pharmacyProducts:
-        final pharmacyId = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => PharmacyProductsScreen(pharmacyId: pharmacyId ?? ''));
       case cart:
         return MaterialPageRoute(builder: (_) => const CartScreen());
       case labsList:
         return MaterialPageRoute(builder: (_) => const LabsListScreen());
       case labTests:
-        final labId = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => LabTestsScreen(labId: labId ?? ''));
       case testBooking:
-        final testId = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => TestBookingScreen(testId: testId ?? ''));
       case insuranceCompanies:
         return MaterialPageRoute(builder: (_) => const InsuranceCompanies());
       case insurancePlans:
-        final companyId = settings.arguments as String?;
         return MaterialPageRoute(builder: (_) => InsurancePlans(companyId: companyId ?? ''));
       case healthDashboard:
         return MaterialPageRoute(builder: (_) => const HealthDashboard());
@@ -135,7 +124,6 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const EmergencyNumbers());
       case sos:
         return MaterialPageRoute(builder: (_) => const SosScreen());
-      case settings:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case reports:
         return MaterialPageRoute(builder: (_) => const ReportsDashboard());
@@ -146,7 +134,6 @@ class AppRouter {
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(child: Text('No route defined for ${settings.name}')),
           ),
         );
     }

@@ -86,21 +86,17 @@ class _HomeTab extends StatelessWidget {
         const SizedBox(height: 14),
 
         // 2. بحث
-        _searchBar(),
         const SizedBox(height: 16),
 
         // 3. Hero Banner
-        _heroBanner(context),
         const SizedBox(height: 16),
 
         // 4. ServicesCarousel (متحرك)
-        _servicesCarousel(context),
         const SizedBox(height: 16),
 
         // 5. خدمات سريعة (8 خدمات)
         _sectionTitle('خدمات سريعة'),
         const SizedBox(height: 10),
-        _quickServicesRow1(context),
         const SizedBox(height: 8),
         _quickServicesRow2(context),
         const SizedBox(height: 22),

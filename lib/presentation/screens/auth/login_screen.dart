@@ -40,13 +40,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void _guest() => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomeScreen()), (r) => false);
   void _login() {
     if (_email.text.isEmpty || _pass.text.isEmpty) { _showMsg('املأ الحقول', true); return; }
-    context.read<AuthBloc>().add(LoginWithEmail(email: _email.text.trim(), password: _pass.text.trim()));
   }
   void _register() {
     if (!_agree) { _showMsg('وافق على الشروط', true); return; }
     if (_regPass.text != _regConfirm.text) { _showMsg('كلمتا المرور غير متطابقتين', true); return; }
     if (_regPass.text.length < 6) { _showMsg('6 أحرف', true); return; }
-    context.read<AuthBloc>().add(RegisterWithEmail(name: _name.text.trim(), email: _regEmail.text.trim(), phone: _regPhone.text.trim(), password: _regPass.text.trim()));
   }
 
   @override
