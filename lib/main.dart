@@ -2,32 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'core/services/firebase_service.dart';
 import 'core/themes/theme_manager.dart';
 import 'presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'presentation/bloc/theme_bloc/theme_bloc.dart';
 import 'presentation/screens/auth/splash_screen.dart';
-import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await SystemChrome.setPreferredOrientations([
+  SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Firebase مع timeout — لن يتجمد أبداً
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(
-      const Duration(seconds: 10),
-      onTimeout: () => throw Exception('firebase_timeout'),
-    );
-  } catch (e) {
-    debugPrint('[Firebase] init: $e');
-  }
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: 'AIzaSyD_frsfhn0jde9cWVUW3hXjGcnMIQmY51k',
+      appId: '1:1053269106596:android:de2128024cd023a973ab31',
+      messagingSenderId: '1053269106596',
+      projectId: 'sehatak-platform',
+      storageBucket: 'sehatak-platform.firebasestorage.app',
+    ),
+  );
+
+  await FirebaseService().initialize();
 
   runApp(const MyApp());
 }
@@ -53,10 +51,7 @@ class MyApp extends StatelessWidget {
             ),
             theme: ThemeManager.lightTheme,
             darkTheme: ThemeManager.darkTheme,
-            themeMode: state is ThemeLoadedState
-                ? state.themeMode
-                : ThemeMode.light,
-            onGenerateRoute: AppRouter.generateRoute,
+            themeMode: state is ThemeLoadedState ? state.themeMode : ThemeMode.light,
             home: const SplashScreen(),
           );
         },
@@ -64,3 +59,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+// 12MB version

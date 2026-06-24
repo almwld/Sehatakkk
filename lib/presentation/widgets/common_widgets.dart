@@ -52,3 +52,54 @@ class CustomSearchBar extends StatelessWidget {
     );
   }
 }
+
+// ========== HeroBannerCard ==========
+class HeroBannerCard extends StatelessWidget {
+  final VoidCallback onTap;
+  const HeroBannerCard({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF00796B), Color(0xFF004D40)]),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [BoxShadow(color: const Color(0xFF00796B).withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6))],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('منصة صحتك، أولويتنا', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          const Text('رعاية موثوقة في أي وقت وأي مكان', style: TextStyle(color: Colors.white70, fontSize: 13)),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(onPressed: onTap, icon: const Icon(Icons.explore, size: 18), label: const Text('استكشف الآن'), style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.primary, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), elevation: 0)),
+        ]),
+      ),
+    );
+  }
+}
+
+// ========== QuickServiceCard ==========
+class QuickServiceCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const QuickServiceCard({super.key, required this.icon, required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 52, height: 52, decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: color.withOpacity(0.15))), child: Icon(icon, color: color, size: 24)),
+        const SizedBox(height: 6),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500)),
+      ]),
+    );
+  }
+}
+
