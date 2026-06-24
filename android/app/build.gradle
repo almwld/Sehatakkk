@@ -43,7 +43,7 @@ android {
 
     defaultConfig {
         applicationId "com.sehatak.app"
-        minSdkVersion 24
+        minSdkVersion 26
         targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
