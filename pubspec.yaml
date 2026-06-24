@@ -139,8 +139,6 @@ flutter:
     - assets/icons/placeholder.png
     - assets/icons/app_icon.png
     - assets/fonts/
-    - assets/animations/
-    - assets/json/
 
   fonts:
     - family: Cairo
