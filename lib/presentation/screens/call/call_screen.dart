@@ -1,20 +1,20 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:jitsi_meet/jitsi_meet.dart';
 import '../../../core/services/call_service.dart';
 
 class CallScreen extends StatefulWidget {
-  final String roomName;
-  final String? displayName;
-  final bool isVideo;
+  final String callId;
+  final String? receiverName;
+  final bool isVideoCall;
+  final bool isIncoming;
 
   const CallScreen({
     Key? key,
-    required this.roomName,
-    this.displayName,
-    this.isVideo = true,
+    required this.callId,
+    this.receiverName,
+    this.isVideoCall = true,
+    this.isIncoming = false,
   }) : super(key: key);
 
   @override
@@ -23,33 +23,30 @@ class CallScreen extends StatefulWidget {
 
 class _CallScreenState extends State<CallScreen> {
   final CallService _callService = CallService();
-  bool _isConnecting = true;
+  CallState _callState = CallState.connecting;
+  Timer? _callTimer;
+  int _callDuration = 0;
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    _joinMeeting();
-  }
-
-  Future<void> _joinMeeting() async {
-    try {
-      await _callService.joinMeeting(
-        widget.roomName,
-        widget.displayName ?? 'مستخدم',
-        widget.isVideo,
-      );
-      setState(() => _isConnecting = false);
-    } catch (e) {
-      setState(() => _isConnecting = false);
-    }
+    _callService.startCall('receiverId', 'receiverName', null, CallType.video);
+    _callTimer = Timer.periodic(const Duration(seconds: 1), (_) => setState(() => _callDuration++));
   }
 
   @override
   void dispose() {
+    _callTimer?.cancel();
+    _callService.dispose();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-    _callService.endCall();
     super.dispose();
+  }
+
+  String _formatDuration(int seconds) {
+    final mins = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -60,14 +57,10 @@ class _CallScreenState extends State<CallScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              widget.isVideo ? Icons.videocam : Icons.phone,
-              size: 80,
-              color: Colors.white54,
-            ),
+            const Icon(Icons.videocam, size: 80, color: Colors.white54),
             const SizedBox(height: 24),
             Text(
-              _isConnecting ? 'جاري الاتصال...' : 'جاري المكالمة',
+              _callState == CallState.inProgress ? 'جاري المكالمة' : 'جاري الاتصال...',
               style: const TextStyle(color: Colors.white, fontSize: 20),
             ),
             const SizedBox(height: 50),
