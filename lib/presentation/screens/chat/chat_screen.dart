@@ -84,7 +84,6 @@ class _ChatScreenState extends State<ChatScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => CallScreen(
-          displayName: _name,
           isVideo: isVideo,
         ),
       ),
