@@ -3,7 +3,7 @@ import '../../../core/constants/app_colors.dart';
 import '../payment/subscription_payment_screen.dart';
 
 /// شاشة الباقات والاشتراكات الموحدة في تطبيق صحتك.
-/// جميع الأسعار المعروضة للمستخدم تستخدم عملة RYE كما طلب المشروع.
+/// جميع الأسعار المعروضة للمستخدم تستخدم عملة RYE.
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
 
@@ -20,8 +20,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   final List<_Plan> _plans = const [
     _Plan(name: 'الباقة المجانية', shortName: 'مجانية', icon: Icons.volunteer_activism_rounded, monthly: 0, annual: 0, description: 'الأساسيات الصحية اليومية بدون رسوم', features: ['3 استشارات مجانية شهرياً', 'سجل صحي إلكتروني', 'تذكير بالمواعيد', 'تصفح الأدوية والأسعار'], limitations: ['استشارات غير محدودة', 'تحاليل منزلية', 'أولوية في الحجز']),
     _Plan(name: 'الباقة الفضية', shortName: 'فضية', icon: Icons.workspace_premium_rounded, monthly: 3000, annual: 30000, description: 'مناسبة للاستخدام الصحي المنتظم', features: ['10 استشارات شهرياً', 'خصم 20% على الأدوية', 'تحليل منزلي مجاني شهرياً', 'متابعة دورية مع طبيب', 'تقارير صحية شهرية', 'سجل صحي متقدم'], limitations: ['استشارات غير محدودة', 'أولوية قصوى']),
+    _Plan(name: 'الباقة البرونزية', shortName: 'برونزية', icon: Icons.shield_rounded, monthly: 3900, annual: 39000, description: 'خطوة متقدمة لرعاية صحية أكثر شمولاً', features: ['20 استشارة شهرياً', 'خصم 25% على الأدوية', 'تحليل منزلي مجاني شهرياً', 'أولوية متوسطة في الحجز', 'تقارير صحية شهرية', 'متابعة صحية أساسية'], limitations: ['استشارات غير محدودة 24/7', 'طبيب شخصي مخصص', 'دعم فني VIP']),
     _Plan(name: 'الباقة الذهبية', shortName: 'ذهبية', icon: Icons.auto_awesome_rounded, monthly: 4900, annual: 35000, description: 'أفضل قيمة للرعاية الصحية المتكاملة', features: ['استشارات غير محدودة 24/7', 'خصم 35% على جميع الأدوية', 'تحاليل منزلية مجانية', 'أولوية في الحجز', 'طبيب شخصي مخصص', 'تقارير صحية أسبوعية', 'محتوى تثقيفي حصري', 'دعم فني VIP'], limitations: const [], popular: true),
     _Plan(name: 'باقة العائلة', shortName: 'عائلة', icon: Icons.family_restroom_rounded, monthly: 7500, annual: 75000, description: 'رعاية متكاملة لك ولعائلتك حتى 5 أفراد', features: ['كل مميزات الباقة الذهبية', 'حتى 5 أفراد من العائلة', 'استشارات أطفال مجانية', 'متابعة الحمل والولادة', 'تطعيمات الأطفال', 'طبيب عائلة مخصص', 'خصم 50% على الأدوية', 'تقارير عائلية شاملة'], limitations: const []),
+    _Plan(name: 'الباقة الكريستالية', shortName: 'كريستالية', icon: Icons.diamond_rounded, monthly: 12000, annual: 120000, description: 'تجربة رعاية صحية فائقة ومتكاملة لك ولعائلتك', features: ['كل مميزات باقة العائلة', 'حتى 8 أفراد من العائلة', 'استشارات غير محدودة 24/7', 'طبيب شخصي وكبير أطباء مخصص', 'أولوية قصوى في الحجوزات', 'تحاليل منزلية متقدمة', 'خصم 60% على الأدوية', 'مدير رعاية صحية شخصي', 'دعم VIP على مدار الساعة', 'تقارير صحية متقدمة وتحليلات دورية'], limitations: const []),
   ];
 
   String _money(int value) => '$value $_currency';
@@ -43,6 +45,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   String _iconAsEmoji(IconData icon) {
     if (icon == Icons.family_restroom_rounded) return '👨‍👩‍👧‍👦';
     if (icon == Icons.auto_awesome_rounded) return '⭐';
+    if (icon == Icons.diamond_rounded) return '💎';
+    if (icon == Icons.shield_rounded) return '🛡️';
     if (icon == Icons.workspace_premium_rounded) return '🏅';
     return '🆓';
   }
