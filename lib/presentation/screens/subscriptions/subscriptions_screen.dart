@@ -2,173 +2,126 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../payment/subscription_payment_screen.dart';
 
+/// شاشة الباقات والاشتراكات الموحدة في تطبيق صحتك.
+/// جميع الأسعار المعروضة للمستخدم تستخدم عملة RYE كما طلب المشروع.
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
+
   @override
   State<SubscriptionsScreen> createState() => _SubscriptionsScreenState();
 }
 
-class _SubscriptionsScreenState extends State<SubscriptionsScreen> with SingleTickerProviderStateMixin {
-  late TabController _tab;
-  int _selectedPlan = 2;
+class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
+  int _selectedPlan = 0;
+  bool _annualBilling = false;
 
-  @override
-  void initState() { super.initState(); _tab = TabController(length: 4, vsync: this); }
+  static const String _currency = 'RYE';
 
-  void _openPayment(String planName, String planPrice, String planEmoji) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SubscriptionPaymentScreen(
-          planName: planName,
-          planPrice: planPrice,
-          planEmoji: planEmoji,
-        ),
-      ),
-    ).then((paid) {
-      if (paid == true) {
-        setState(() {
-          // تحديث الباقة المختارة بعد الدفع الناجح
-          if (planName.contains('مجانية')) _selectedPlan = 0;
-          if (planName.contains('فضية')) _selectedPlan = 1;
-          if (planName.contains('ذهبية')) _selectedPlan = 2;
-          if (planName.contains('عائلة')) _selectedPlan = 3;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('🎉 تم الاشتراك في $planName بنجاح!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+  final List<_Plan> _plans = const [
+    _Plan(name: 'الباقة المجانية', shortName: 'مجانية', icon: Icons.volunteer_activism_rounded, monthly: 0, annual: 0, description: 'الأساسيات الصحية اليومية بدون رسوم', features: ['3 استشارات مجانية شهرياً', 'سجل صحي إلكتروني', 'تذكير بالمواعيد', 'تصفح الأدوية والأسعار'], limitations: ['استشارات غير محدودة', 'تحاليل منزلية', 'أولوية في الحجز']),
+    _Plan(name: 'الباقة الفضية', shortName: 'فضية', icon: Icons.workspace_premium_rounded, monthly: 3000, annual: 30000, description: 'مناسبة للاستخدام الصحي المنتظم', features: ['10 استشارات شهرياً', 'خصم 20% على الأدوية', 'تحليل منزلي مجاني شهرياً', 'متابعة دورية مع طبيب', 'تقارير صحية شهرية', 'سجل صحي متقدم'], limitations: ['استشارات غير محدودة', 'أولوية قصوى']),
+    _Plan(name: 'الباقة الذهبية', shortName: 'ذهبية', icon: Icons.auto_awesome_rounded, monthly: 4900, annual: 35000, description: 'أفضل قيمة للرعاية الصحية المتكاملة', features: ['استشارات غير محدودة 24/7', 'خصم 35% على جميع الأدوية', 'تحاليل منزلية مجانية', 'أولوية في الحجز', 'طبيب شخصي مخصص', 'تقارير صحية أسبوعية', 'محتوى تثقيفي حصري', 'دعم فني VIP'], limitations: const [], popular: true),
+    _Plan(name: 'باقة العائلة', shortName: 'عائلة', icon: Icons.family_restroom_rounded, monthly: 7500, annual: 75000, description: 'رعاية متكاملة لك ولعائلتك حتى 5 أفراد', features: ['كل مميزات الباقة الذهبية', 'حتى 5 أفراد من العائلة', 'استشارات أطفال مجانية', 'متابعة الحمل والولادة', 'تطعيمات الأطفال', 'طبيب عائلة مخصص', 'خصم 50% على الأدوية', 'تقارير عائلية شاملة'], limitations: const []),
+  ];
+
+  String _money(int value) => '$value $_currency';
+
+  void _openPayment(_Plan plan) {
+    if (plan.monthly == 0) {
+      setState(() => _selectedPlan = _plans.indexOf(plan));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('أنت على الباقة المجانية حالياً.')));
+      return;
+    }
+    final price = _annualBilling ? plan.annual : plan.monthly;
+    Navigator.push(context, MaterialPageRoute(builder: (_) => SubscriptionPaymentScreen(planName: plan.name, planPrice: _money(price), planEmoji: _iconAsEmoji(plan.icon)))).then((paid) {
+      if (!mounted || paid != true) return;
+      setState(() => _selectedPlan = _plans.indexOf(plan));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم الاشتراك في ${plan.name} بنجاح.'), backgroundColor: AppColors.success));
     });
+  }
+
+  String _iconAsEmoji(IconData icon) {
+    if (icon == Icons.family_restroom_rounded) return '👨‍👩‍👧‍👦';
+    if (icon == Icons.auto_awesome_rounded) return '⭐';
+    if (icon == Icons.workspace_premium_rounded) return '🏅';
+    return '🆓';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('الباقات والاشتراكات', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tab, isScrollable: true,
-          indicatorColor: Colors.white, indicatorWeight: 3,
-          labelColor: Colors.white, unselectedLabelColor: Colors.white60,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          tabs: const [Tab(text: 'الباقات'), Tab(text: 'الاستشارات'), Tab(text: 'العروض'), Tab(text: 'حسابي')],
-        ),
-      ),
-      body: TabBarView(controller: _tab, children: [
-        _buildPlansTab(),
-        _buildConsultationsTab(),
-        _buildOffersTab(),
-        _buildMyAccountTab(),
-      ]),
+      backgroundColor: const Color(0xFFF4F6F7),
+      appBar: AppBar(title: const Text('الباقات والاشتراكات', style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0),
+      body: SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(14, 16, 14, 28), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        _buildHeader(),
+        const SizedBox(height: 14),
+        _buildBillingSwitch(),
+        const SizedBox(height: 14),
+        ...List.generate(_plans.length, (index) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _buildPlanCard(_plans[index], index))),
+        _buildTrustNote(),
+      ])),),
     );
   }
 
-  Widget _buildPlansTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(14),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('اختر الباقة المناسبة لك', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const Text('وفر أكثر مع الباقات السنوية - خصم يصل إلى 40%', style: TextStyle(color: AppColors.grey, fontSize: 12)),
-        const SizedBox(height: 16),
-        _planCard('الباقة المجانية', '🆓', '0', 'للأبد', AppColors.grey, ['✅ 3 استشارات مجانية شهرياً', '✅ سجل صحي إلكتروني', '✅ تذكير بالمواعيد', '✅ تصفح الأدوية والأسعار', '❌ استشارات غير محدودة', '❌ تحاليل منزلية', '❌ أولوية في الحجز'], _selectedPlan == 0),
-        const SizedBox(height: 12),
-        _planCard('الباقة الفضية', '🥈', '3,000', 'شهرياً', AppColors.info, ['✅ 10 استشارات شهرياً', '✅ خصم 20% على الأدوية', '✅ تحليل منزلي مجاني شهرياً', '✅ متابعة دورية مع طبيب', '✅ تقارير صحية شهرية', '✅ سجل صحي متقدم', '❌ استشارات غير محدودة', '❌ أولوية قصوى'], _selectedPlan == 1),
-        const SizedBox(height: 12),
-        _planCard('الباقة الذهبية', '🥇', '4,900', 'شهرياً', AppColors.amber, ['✅ استشارات غير محدودة 24/7', '✅ خصم 35% على جميع الأدوية', '✅ تحاليل منزلية مجانية', '✅ أولوية في الحجز', '✅ طبيب شخصي مخصص', '✅ تقارير صحية أسبوعية', '✅ فيديوهات تثقيفية حصرية', '✅ دعم فني VIP'], _selectedPlan == 2, isPopular: true, discount: 'وفر 40% سنوياً - 35,000 ر.ي فقط'),
-        const SizedBox(height: 12),
-        _planCard('باقة العائلة', '👨‍👩‍👧‍👦', '7,500', 'شهرياً', AppColors.purple, ['✅ كل مميزات الذهبية', '✅ حتى 5 أفراد من العائلة', '✅ استشارات أطفال مجانية', '✅ متابعة حمل وولادة', '✅ تطعيمات مجانية للأطفال', '✅ طبيب عائلة مخصص', '✅ خصم 50% على الأدوية', '✅ تقارير عائلية شاملة'], _selectedPlan == 3),
-      ]),
-    );
-  }
-
-  Widget _planCard(String title, String emoji, String price, String period, Color color, List<String> features, bool selected, {bool isPopular = false, String? discount}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: selected ? color.withOpacity(0.05) : Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: selected ? color : Colors.transparent, width: selected ? 2 : 0), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)]),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if (isPopular) Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: AppColors.amber, borderRadius: BorderRadius.circular(20)), child: const Text('🌟 الأكثر شيوعاً', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold))),
-        Row(children: [Text(emoji, style: const TextStyle(fontSize: 30)), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)), if (discount != null) Text(discount, style: const TextStyle(fontSize: 10, color: AppColors.success))])), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('$price ر.ي', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)), Text('/$period', style: const TextStyle(fontSize: 10, color: AppColors.grey))])]),
-        const Divider(height: 20),
-        ...features.map((f) => Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(f, style: TextStyle(fontSize: 12, color: f.startsWith('✅') ? AppColors.success : f.startsWith('❌') ? AppColors.grey : AppColors.darkGrey)))),
-        const SizedBox(height: 12),
-        SizedBox(width: double.infinity, height: 46, child: ElevatedButton(
-          onPressed: selected ? null : () => _openPayment(title, price, emoji),
-          style: ElevatedButton.styleFrom(backgroundColor: selected ? color : AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-          child: Text(selected ? 'باقتك الحالية' : 'اشترك الآن', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-        )),
-      ]),
-    );
-  }
-
-  Widget _buildConsultationsTab() {
-    return SingleChildScrollView(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('أسعار الاستشارات', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-      const Text('اختر نوع الاستشارة المناسبة', style: TextStyle(color: AppColors.grey, fontSize: 12)),
-      const SizedBox(height: 16),
-      _consultCard('💬', 'استشارة نصية', 'تواصل مع الطبيب عبر الرسائل النصية', '1,500', AppColors.info),
-      _consultCard('📞', 'استشارة صوتية', 'مكالمة صوتية مباشرة', '3,000', AppColors.success),
-      _consultCard('📹', 'استشارة مرئية', 'مكالمة فيديو مباشرة', '5,000', AppColors.primary),
-      _consultCard('🚨', 'استشارة طارئة', 'استشارة فورية للحالات الطارئة', '8,000', AppColors.error),
-      _consultCard('🏠', 'زيارة منزلية', 'زيارة طبيب إلى منزلك', '10,000', AppColors.purple),
-      _consultCard('🩺', 'كشف عام', 'فحص طبي شامل', '4,000', AppColors.teal),
-    ]));
-  }
-
-  Widget _consultCard(String emoji, String title, String desc, String price, Color color) {
-    return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6)]), child: Row(children: [
-      Container(width: 50, height: 50, decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24)))),
+  Widget _buildHeader() {
+    return Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.primary.withOpacity(0.12))), child: Row(children: [
+      Container(width: 52, height: 52, decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.10), borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.health_and_safety_rounded, color: AppColors.primary, size: 28)),
       const SizedBox(width: 12),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), Text(desc, style: const TextStyle(fontSize: 11, color: AppColors.grey))])),
-      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('$price ر.ي', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)), const SizedBox(height: 4), ElevatedButton(onPressed: () => _openPayment(title, price, emoji), style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white, minimumSize: const Size(70, 28), padding: const EdgeInsets.symmetric(horizontal: 10), textStyle: const TextStyle(fontSize: 11)).copyWith(elevation: MaterialStateProperty.all(0)), child: const Text('احجز'))]),
+      const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('اختر باقتك الصحية', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), SizedBox(height: 4), Text('رعاية صحية تناسب احتياجاتك وميزانيتك', style: TextStyle(fontSize: 12, color: AppColors.grey))])),
     ]));
   }
 
-  Widget _buildOffersTab() {
-    return SingleChildScrollView(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('عروض حصرية', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-      const Text('لفترة محدودة - سارع بالحجز', style: TextStyle(color: AppColors.grey, fontSize: 12)),
-      const SizedBox(height: 16),
-      _offerCard('🎉', 'خصم 50% على الباقة الذهبية', 'للثلاثة أشهر الأولى', '4,900', '2,450', AppColors.amber, 'ينتهي خلال 7 أيام'),
-      _offerCard('👨‍👩‍👧‍👦', 'باقة العائلة + استشارات مجانية', 'شهر مجاناً عند الاشتراك السنوي', '7,500', '0', AppColors.purple, 'العرض محدود'),
-      _offerCard('🏥', 'فحص شامل مجاني', 'مع أي باقة سنوية - تحاليل + كشف', '15,000', 'مجاناً', AppColors.success, 'لأول 100 مشترك'),
+  Widget _buildBillingSwitch() {
+    return Container(padding: const EdgeInsets.all(5), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE1E6E8))), child: Row(children: [Expanded(child: _billingChoice('شهري', false)), Expanded(child: _billingChoice('سنوي', true))]));
+  }
+
+  Widget _billingChoice(String label, bool annual) {
+    final selected = _annualBilling == annual;
+    return GestureDetector(onTap: () => setState(() => _annualBilling = annual), child: AnimatedContainer(duration: const Duration(milliseconds: 180), padding: const EdgeInsets.symmetric(vertical: 11), decoration: BoxDecoration(color: selected ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(10)), child: Text(label, textAlign: TextAlign.center, style: TextStyle(color: selected ? Colors.white : AppColors.darkGrey, fontWeight: FontWeight.bold, fontSize: 13))));
+  }
+
+  Widget _buildPlanCard(_Plan plan, int index) {
+    final selected = _selectedPlan == index;
+    final price = _annualBilling ? plan.annual : plan.monthly;
+    return Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: selected || plan.popular ? AppColors.primary.withOpacity(0.55) : const Color(0xFFE1E6E8), width: selected || plan.popular ? 1.5 : 1)), child: Column(children: [
+      if (plan.popular) Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 7), decoration: const BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.vertical(top: Radius.circular(17))), child: const Text('الأكثر اختياراً', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold))),
+      Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Container(width: 48, height: 48, decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.09), borderRadius: BorderRadius.circular(14)), child: Icon(plan.icon, color: AppColors.primary, size: 25)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(plan.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), const SizedBox(height: 3), Text(plan.description, style: const TextStyle(fontSize: 11, color: AppColors.grey))])),
+          const SizedBox(width: 8),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(_money(price), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppColors.primary)), Text(_annualBilling ? 'سنوياً' : 'شهرياً', style: const TextStyle(fontSize: 10, color: AppColors.grey))]),
+        ]),
+        if (_annualBilling && plan.monthly > 0) Padding(padding: const EdgeInsets.only(top: 8), child: Text('ما يعادل ${_money((plan.annual / 12).round())} شهرياً', style: const TextStyle(fontSize: 10, color: AppColors.success, fontWeight: FontWeight.bold))),
+        const Divider(height: 24),
+        ...plan.features.map((feature) => _featureRow(feature, true)),
+        ...plan.limitations.map((feature) => _featureRow(feature, false)),
+        const SizedBox(height: 10),
+        SizedBox(height: 46, child: ElevatedButton(onPressed: selected && index == 0 ? null : () => _openPayment(plan), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, disabledBackgroundColor: AppColors.primary.withOpacity(0.12), disabledForegroundColor: AppColors.primary, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: Text(selected ? 'باقتك الحالية' : (price == 0 ? 'ابدأ مجاناً' : 'اشترك الآن'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)))),
+      ])),
     ]));
   }
 
-  Widget _offerCard(String emoji, String title, String desc, String oldPrice, String newPrice, Color color, String badge) {
-    return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(gradient: LinearGradient(colors: [color.withOpacity(0.05), color.withOpacity(0.02)]), borderRadius: BorderRadius.circular(14), border: Border.all(color: color.withOpacity(0.15))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [Text(emoji, style: const TextStyle(fontSize: 28)), const SizedBox(width: 10), Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))), Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)), child: Text(badge, style: TextStyle(fontSize: 9, color: color)))]),
-      const SizedBox(height: 4), Text(desc, style: const TextStyle(fontSize: 11, color: AppColors.grey)),
-      const SizedBox(height: 10),
-      Row(children: [Text(oldPrice, style: const TextStyle(fontSize: 13, color: AppColors.grey, decoration: TextDecoration.lineThrough)), const SizedBox(width: 8), Text(newPrice, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)), const Spacer(), ElevatedButton(onPressed: () => _openPayment(title, newPrice, emoji), style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white, minimumSize: const Size(90, 30), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))), child: const Text('استفد الآن'))]),
-    ]));
+  Widget _featureRow(String text, bool enabled) {
+    return Padding(padding: const EdgeInsets.only(bottom: 7), child: Row(children: [Icon(enabled ? Icons.check_circle_rounded : Icons.remove_circle_outline_rounded, size: 18, color: enabled ? AppColors.success : AppColors.grey), const SizedBox(width: 7), Expanded(child: Text(text, style: TextStyle(fontSize: 12, color: enabled ? AppColors.darkGrey : AppColors.grey)))]));
   }
 
-  Widget _buildMyAccountTab() {
-    return SingleChildScrollView(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('اشتراكي الحالي', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 12),
-      Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.amber, Color(0xFFFF8F00)]), borderRadius: BorderRadius.circular(16)), child: Column(children: [const Icon(Icons.workspace_premium, color: Colors.white, size: 50), const SizedBox(height: 8), const Text('الباقة الذهبية', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), const Text('سارية حتى 6 يونيو 2026', style: TextStyle(color: Colors.white70, fontSize: 13)), const SizedBox(height: 12), Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)), child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.check_circle, color: Colors.white, size: 18), SizedBox(width: 6), Text('الدفع التالي: 6 يونيو - 4,900 ر.ي', style: TextStyle(color: Colors.white, fontSize: 12))]))])),
-      const SizedBox(height: 16),
-      const Text('طرق الدفع', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), const SizedBox(height: 8),
-      _payMethod('💳', 'فلوسك', '**** 4582'),
-      _payMethod('💰', 'كاش', '**** 7891'),
-      _payMethod('📱', 'جوالي', '**** 3456'),
-      const SizedBox(height: 20),
-      const Text('إدارة الاشتراك', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), const SizedBox(height: 8),
-      ListTile(leading: const Icon(Icons.upgrade, color: AppColors.primary), title: const Text('ترقية الباقة'), trailing: const Icon(Icons.arrow_forward_ios, size: 16), onTap: () => _tab.animateTo(0)),
-      ListTile(leading: const Icon(Icons.pause_circle, color: AppColors.warning), title: const Text('تجميد الاشتراك'), subtitle: const Text('حتى 3 أشهر'), trailing: const Icon(Icons.arrow_forward_ios, size: 16), onTap: () {}),
-      ListTile(leading: const Icon(Icons.cancel, color: AppColors.error), title: const Text('إلغاء الاشتراك'), trailing: const Icon(Icons.arrow_forward_ios, size: 16), onTap: () {}),
-    ]));
+  Widget _buildTrustNote() {
+    return Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE1E6E8))), child: const Row(children: [Icon(Icons.lock_outline_rounded, color: AppColors.primary, size: 20), SizedBox(width: 8), Expanded(child: Text('الدفع يتم عبر محافظ إلكترونية يمنية مدعومة. الأسعار الظاهرة في هذه الشاشة بعملة RYE.', style: TextStyle(fontSize: 11, color: AppColors.grey)))]));
   }
+}
 
-  Widget _payMethod(String emoji, String name, String number) {
-    return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4)]), child: Row(children: [Text(emoji, style: const TextStyle(fontSize: 24)), const SizedBox(width: 10), Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.bold))), Text(number, style: const TextStyle(color: AppColors.grey, fontSize: 12))]));
-  }
+class _Plan {
+  final String name;
+  final String shortName;
+  final IconData icon;
+  final int monthly;
+  final int annual;
+  final String description;
+  final List<String> features;
+  final List<String> limitations;
+  final bool popular;
 
-  @override
-  void dispose() { _tab.dispose(); super.dispose(); }
+  const _Plan({required this.name, required this.shortName, required this.icon, required this.monthly, required this.annual, required this.description, required this.features, required this.limitations, this.popular = false});
 }
