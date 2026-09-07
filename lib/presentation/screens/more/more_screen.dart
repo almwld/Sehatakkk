@@ -89,6 +89,7 @@ import 'package:sehatak/presentation/screens/video_consult/video_consult_screen.
 import 'package:sehatak/presentation/screens/visit_history/visit_history_screen.dart';
 import 'package:sehatak/presentation/screens/hospital_compare/hospital_compare_screen.dart';
 import 'package:sehatak/presentation/screens/medical_notes/medical_notes_screen.dart';
+import 'package:sehatak/presentation/screens/subscriptions/subscriptions_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -100,7 +101,6 @@ class MoreScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // ========= خدمات سريعة =========
           Text('خدمات سريعة', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           GridView.count(
@@ -119,9 +119,9 @@ class MoreScreen extends StatelessWidget {
           ),
           const SizedBox(height: 22),
 
-          // ========= الرعاية الصحية =========
           Text('الرعاية الصحية', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
+          _menuItem(context, Icons.card_membership_rounded, 'الباقات', 'الباقات والاشتراكات الصحية', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionsScreen()))),
           _menuItem(context, Icons.calendar_month_rounded, 'مواعيدي', 'عرض وإدارة المواعيد', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientAppointments()))),
           _menuItem(context, Icons.receipt_long, 'الوصفات الطبية', 'عرض الوصفات', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientPrescriptions()))),
           _menuItem(context, Icons.folder_shared, 'السجل الطبي', 'سجل صحي كامل', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientMedicalHistory()))),
@@ -130,7 +130,6 @@ class MoreScreen extends StatelessWidget {
           _menuItem(context, Icons.history, 'سجل الزيارات', 'تاريخ زياراتك', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitHistoryScreen()))),
           const SizedBox(height: 22),
 
-          // ========= خدمات متخصصة =========
           Text('خدمات متخصصة', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           _menuItem(context, Icons.tips_and_updates, 'نصائح صحية', 'نصائح يومية مفيدة', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthTipsScreen()))),
@@ -142,7 +141,6 @@ class MoreScreen extends StatelessWidget {
           _menuItem(context, Icons.vaccines, 'سجل التطعيمات', 'تطعيماتك كاملة', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaccinationScreen()))),
           const SizedBox(height: 22),
 
-          // ========= أدوات صحية =========
           Text('أدوات صحية', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           _menuItem(context, Icons.medical_services, 'إسعافات أولية', 'دليل الطوارئ', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FirstAidScreen()))),
@@ -154,7 +152,6 @@ class MoreScreen extends StatelessWidget {
           _menuItem(context, Icons.favorite, 'معدل القلب', 'نبضات القلب والتمارين', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HeartRateScreen()))),
           const SizedBox(height: 22),
 
-          // ========= متابعة صحية =========
           Text('متابعة صحية', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           _menuItem(context, Icons.alarm, 'تذكير الأدوية', 'لا تنس جرعاتك', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicationReminderScreen()))),
@@ -166,7 +163,6 @@ class MoreScreen extends StatelessWidget {
           _menuItem(context, Icons.bloodtype_outlined, 'تتبع السكر', 'قراءات الجلوكوز', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GlucoseTrackerScreen()))),
           const SizedBox(height: 22),
 
-          // ========= خدمات أخرى =========
           Text('خدمات أخرى', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           _menuItem(context, Icons.description, 'تقارير طبية', 'تقاريرك المخزنة', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MedicalReportsScreen()))),
@@ -183,7 +179,6 @@ class MoreScreen extends StatelessWidget {
           _menuItem(context, Icons.mic, 'بحث صوتي', 'تحدث للبحث', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VoiceSearchScreen()))),
           const SizedBox(height: 22),
 
-          // ========= عام =========
           _menuItem(context, Icons.calendar_month, 'التقويم الصحي', 'مواعيدك وأحداثك', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthCalendarScreen()))),
           _menuItem(context, Icons.search, 'بحث متقدم', 'ابحث في كل الخدمات', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen()))),
           _menuItem(context, Icons.dashboard, 'المؤشرات الحيوية', 'ضغط، سكر، وزن، نوم', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VitalsDashboardScreen()))),
@@ -222,36 +217,20 @@ class MoreScreen extends StatelessWidget {
   }
 
   Widget _serviceItem(BuildContext context, IconData icon, String label, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: color.withOpacity(0.08), shape: BoxShape.circle),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
-      ]),
-    );
+    return GestureDetector(onTap: onTap, child: Column(children: [
+      Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.08), shape: BoxShape.circle), child: Icon(icon, color: color, size: 22)),
+      const SizedBox(height: 4),
+      Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+    ]));
   }
 
   Widget _menuItem(BuildContext context, IconData icon, String title, String subtitle, VoidCallback onTap) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 5), elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: AppColors.primary, size: 20),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 10, color: AppColors.grey)),
-        trailing: const Icon(Icons.arrow_back_ios, size: 12, color: AppColors.grey),
-        onTap: onTap,
-      ),
-    );
+    return Card(margin: const EdgeInsets.only(bottom: 5), elevation: 0, color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), child: ListTile(
+      leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: AppColors.primary, size: 20)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 10, color: AppColors.grey)),
+      trailing: const Icon(Icons.arrow_back_ios, size: 12, color: AppColors.grey),
+      onTap: onTap,
+    ));
   }
 }
